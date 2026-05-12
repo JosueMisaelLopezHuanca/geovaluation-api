@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avalix Visor Catastral</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: rgba(255, 255, 255, 0.96);
+      --line: #d8ddea;
+      --text: #162033;
+      --muted: #5d667d;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    .shell { max-width: 1540px; margin: 0 auto; padding: 18px; }
+    .topbar, .layout { display: grid; gap: 18px; }
+    .topbar { grid-template-columns: 1.45fr .85fr; margin-bottom: 18px; }
+    .layout { grid-template-columns: minmax(0,1fr) 360px; }
+    .hero, .section, .band, .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+    .hero { padding: 20px 22px; }
+    .hero h1 { margin: 0 0 8px; font-size: 28px; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+    .stat { padding: 14px; min-height: 92px; }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .stat .value { margin-top: 8px; font-size: 24px; font-weight: 700; }
+    .maps, .sidepanel { display: grid; gap: 18px; align-content: start; }
+    .band-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line); }
+    .band-head h2, .section h3 { margin:0; }
+    .band-head span, .helper, .status { color: var(--muted); font-size:13px; }
+    .map { height: 340px; width: 100%; }
+    .section { padding: 14px 16px; }
+    .kv, .form-grid, .legend, .method-list { display:grid; gap:10px; }
+    .kv div { display:grid; gap:2px; padding-bottom:8px; border-bottom:1px solid rgba(216,221,234,.85); }
+    .kv div:last-child { border-bottom:0; padding-bottom:0; }
+    .kv strong { font-size:12px; color:var(--muted); }
+    .kv span { font-size:14px; line-height:1.4; }
+    .legend-item { display:flex; align-items:center; gap:10px; font-size:13px; }
+    .method-item { display:grid; gap:4px; padding-bottom:10px; border-bottom:1px solid rgba(216,221,234,.85); }
+    .method-item:last-child { border-bottom:0; padding-bottom:0; }
+    .chip-row { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { display:inline-flex; align-items:center; min-height:28px; padding:4px 10px; border:1px solid var(--line); border-radius:999px; background:#fff; font-size:12px; color:var(--text); }
+    .swatch { width:14px; height:14px; border-radius:3px; border:1px solid rgba(22,32,51,.18); }
+    .controls { display:flex; flex-wrap:wrap; gap:14px; align-items:center; color:var(--muted); font-size:13px; }
+    .controls label, .field { display:grid; gap:6px; font-size:13px; color:var(--muted); }
+    .controls input[type="range"] { width:120px; }
+    .field input, .field textarea, .field select {
+      width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:inherit; color:var(--text); background:#fff;
+    }
+    .field textarea { min-height: 70px; resize: vertical; }
+    .button-row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .button {
+      appearance:none; border:1px solid #1f6fb6; background:#1f6fb6; color:#fff; border-radius:8px; padding:10px 12px; font:inherit; font-weight:600; cursor:pointer;
+    }
+    .button.secondary { background:#fff; color:#1f6fb6; }
+    .button:disabled { opacity:.55; cursor:wait; }
+    .helper code { font-family: ui-monospace, monospace; }
+    @media (max-width: 1180px) { .topbar, .layout { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <section class="hero">
+        <h1>Avalix Visor Catastral</h1>
+        <p>Vista operativa para entender el predio completo: superficie automática, zonas homogéneas, pendientes, riesgos, servicios y cálculo de avalúo con opción automática o editable.</p>
+      </section>
+      <section class="stats" id="stats"></section>
+    </div>
+
+    <div class="layout">
+      <main class="maps">
+        <section class="band">
+          <div class="band-head">
+            <div>
+              <h2>Zonas homogéneas</h2>
+              <span>Capa base para entender cómo se asigna el valor del suelo.</span>
+            </div>
+          </div>
+          <div id="map-zonas" class="map"></div>
+        </section>
+
+        <section class="band">
+          <div class="band-head">
+            <div>
+              <h2>Pendientes y riesgos</h2>
+              <span>Lectura visual del contexto físico del predio.</span>
+            </div>
+            <div class="controls">
+              <label>Pendiente <input id="opacity-pendiente" type="range" min="0" max="100" value="50"></label>
+              <label>Riesgo <input id="opacity-riesgo" type="range" min="0" max="100" value="40"></label>
+              <label>Zonas homogéneas <input id="opacity-zonas" type="range" min="0" max="100" value="28"></label>
+            </div>
+          </div>
+          <div id="map-combinado" class="map"></div>
+        </section>
+      </main>
+
+      <aside class="sidepanel">
+        <section class="section">
+          <h3>Leyenda</h3>
+          <div class="legend">
+            <div class="legend-item"><span class="swatch" style="background:#2f86c7"></span><span>Pendiente 1</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#b7dea0"></span><span>Pendiente 2</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#f3c983"></span><span>Pendiente 3</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#82c7e6"></span><span>Riesgo muy bajo / bajo</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#f0d36f"></span><span>Riesgo moderado</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#cf4c4c"></span><span>Riesgo alto / muy alto</span></div>
+            <div class="legend-item"><span class="swatch" style="background:#8a6de9"></span><span>Zonas homogéneas</span></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Predio seleccionado</h3>
+          <div class="kv" id="predio-detalle">
+            <div><strong>Estado</strong><span>Haz clic en un predio del mapa combinado.</span></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Como lo calcula</h3>
+          <div class="method-list" id="metodologia-detalle">
+            <div class="method-item"><strong>Cargando</strong><span>Consultando la metodologia del backend...</span></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Cálculo de avalúo</h3>
+          <div class="form-grid">
+            <label class="field">
+              <span>Superficie del terreno</span>
+              <input id="superficie-input" type="number" min="0.01" step="0.01" placeholder="Automática desde el predio">
+            </label>
+            <div class="helper" id="superficie-helper">Fuente automática: <code>predio.superficie_mensura</code></div>
+            <label class="field">
+              <span>Valor base m2</span>
+              <input id="valor-base-input" type="number" min="0.01" step="0.01" value="100">
+            </label>
+            <label class="field">
+              <span>Servicios aplicados</span>
+              <textarea id="servicios-input" readonly></textarea>
+            </label>
+            <label class="field">
+              <span>Gestión</span>
+              <input id="gestion-input" type="number" step="1" value="2026">
+            </label>
+          </div>
+          <div class="button-row" style="margin-top:12px;">
+            <button id="avaluo-auto-btn" class="button" disabled>Automático</button>
+            <button id="avaluo-manual-btn" class="button secondary" disabled>Con superficie editada</button>
+          </div>
+          <div class="status" id="avaluo-status"></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const center = [-16.5, -68.15];
+    const zoom = 13;
+    const statsEl = document.getElementById("stats");
+    const detailEl = document.getElementById("predio-detalle");
+    const avaluoStatus = document.getElementById("avaluo-status");
+    const metodologiaEl = document.getElementById("metodologia-detalle");
+    const superficieInput = document.getElementById("superficie-input");
+    const superficieHelper = document.getElementById("superficie-helper");
+    const valorBaseInput = document.getElementById("valor-base-input");
+    const serviciosInput = document.getElementById("servicios-input");
+    const gestionInput = document.getElementById("gestion-input");
+    const autoBtn = document.getElementById("avaluo-auto-btn");
+    const manualBtn = document.getElementById("avaluo-manual-btn");
+    let selectedPredioId = null;
+    let selectedContext = null;
+
+    const maps = {
+      zonas: L.map("map-zonas").setView(center, zoom),
+      combinado: L.map("map-combinado").setView(center, zoom)
+    };
+    Object.values(maps).forEach((map) => {
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
+    });
+
+    const pendienteColors = {1:"#2f86c7",2:"#b7dea0",3:"#f3c983"};
+    const riesgoColors = {51:"#82c7e6",102:"#9dd7b4",153:"#f0d36f",204:"#e68867",255:"#cf4c4c"};
+    const zonaPalette = ["#8a6de9","#5963d7","#35a1ff","#41b88f","#f0b451","#ef7a5d"];
+    const zoneColor = (code) => zonaPalette[Math.abs([...String(code || "")].reduce((a, c) => a + c.charCodeAt(0), 0)) % zonaPalette.length];
+
+    function stylePredio() { return { color:"#ff4a4a", weight:1.2, opacity:.92, fillOpacity:0 }; }
+    function stylePendiente(f, opacity=.5) { const c = pendienteColors[f.properties.codigo] || "#a9d2c7"; return { color:c, weight:.4, opacity:opacity+.15, fillColor:c, fillOpacity:opacity }; }
+    function styleRiesgo(f, opacity=.4) { const c = riesgoColors[f.properties.codigo] || "#cf8c6a"; return { color:c, weight:.4, opacity:opacity+.15, fillColor:c, fillOpacity:opacity }; }
+    function styleZona(f, opacity=.28) { const c = zoneColor(f.properties.codigo); return { color:c, weight:.7, opacity:opacity+.2, fillColor:c, fillOpacity:opacity }; }
+
+    const layers = {
+      zonas: {
+        single: L.geoJSON(null, { style: (f) => styleZona(f, .32) }).addTo(maps.zonas),
+        combined: L.geoJSON(null, { style: (f) => styleZona(f, .28) }).addTo(maps.combinado)
+      },
+      pendientes: L.geoJSON(null, { style: (f) => stylePendiente(f, .5) }).addTo(maps.combinado),
+      riesgos: L.geoJSON(null, { style: (f) => styleRiesgo(f, .4) }).addTo(maps.combinado),
+      predios: L.geoJSON(null, {
+        style: stylePredio,
+        onEachFeature: (feature, layer) => layer.on("click", () => selectPredio(feature.properties.id))
+      }).addTo(maps.combinado)
+    };
+
+    const buildStat = (label, value) => `<div class="stat"><div class="label">${label}</div><div class="value">${Intl.NumberFormat("es-BO").format(value ?? 0)}</div></div>`;
+    async function fetchJSON(url, options) { const r = await fetch(url, options); if (!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json(); }
+    const boundsToQuery = (bounds) => {
+      const sw = bounds.getSouthWest(); const ne = bounds.getNorthEast();
+      return new URLSearchParams({ xmin: sw.lng, ymin: sw.lat, xmax: ne.lng, ymax: ne.lat });
+    };
+
+    async function loadStats() {
+      const [contexto, cobertura] = await Promise.all([
+        fetchJSON("/api/v1/avaluos/contexto-estadisticas"),
+        fetchJSON("/api/v1/avaluos/cobertura-estadisticas")
+      ]);
+      statsEl.innerHTML = [
+        buildStat("Predios", cobertura.total_predios),
+        buildStat("Con pendiente", contexto.con_pendiente),
+        buildStat("Con riesgo", contexto.con_riesgo),
+        buildStat("Con zona homog.", cobertura.con_zona_homogenea),
+        buildStat("Con zona valor", cobertura.con_zona_valor),
+        buildStat("Con servicios", cobertura.con_servicios)
+      ].join("");
+    }
+
+    async function loadMetodologia() {
+      const meta = await fetchJSON("/api/v1/avaluos/metodologia");
+      metodologiaEl.innerHTML = `
+        <div class="method-item">
+          <strong>Superficie del predio</strong>
+          <span>${meta.superficie_terreno.descripcion}</span>
+          <div class="chip-row">
+            <span class="chip">${meta.superficie_terreno.fuente_automatica}</span>
+            <span class="chip">${meta.superficie_terreno.campo_override}</span>
+          </div>
+        </div>
+        <div class="method-item">
+          <strong>Zonas homogeneas</strong>
+          <span>Tabla ${meta.zona_homogenea.tabla}. Metodo ${meta.zona_homogenea.metodo}.</span>
+          <div class="chip-row">
+            ${meta.zona_homogenea.campos_origen.map((v) => `<span class="chip">${v}</span>`).join("")}
+          </div>
+        </div>
+        <div class="method-item">
+          <strong>Material de via</strong>
+          <span>Se infiere desde ${meta.material_via.tabla_origen}.${meta.material_via.campo_origen}.</span>
+          <div class="chip-row">
+            ${Object.entries(meta.material_via.mapeo).map(([k, v]) => `<span class="chip">${k}: ${v}</span>`).join("")}
+          </div>
+        </div>
+        <div class="method-item">
+          <strong>Servicios</strong>
+          <span>Se leen desde ${meta.servicios.tablas_origen.join(" y ")}.</span>
+          <div class="chip-row">
+            ${Object.entries(meta.servicios.mapeo).map(([k, v]) => `<span class="chip">${k}: ${v}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadLayer(layerName, target, limit = 1500, mapKey = "combinado") {
+      const params = boundsToQuery(maps[mapKey].getBounds());
+      params.set("limit", String(limit));
+      const geojson = await fetchJSON(`/api/v1/avaluos/capas/${layerName}/bbox?${params.toString()}`);
+      target.clearLayers();
+      target.addData(geojson);
+    }
+
+    async function loadPredios(limit = 1800) {
+      const params = boundsToQuery(maps.combinado.getBounds());
+      params.set("limit", String(limit));
+      const geojson = await fetchJSON(`/api/v1/predios/bbox?${params.toString()}`);
+      layers.predios.clearLayers();
+      layers.predios.addData(geojson);
+    }
+
+    function renderContext(ctx) {
+      detailEl.innerHTML = `
+        <div><strong>Predio</strong><span>${ctx.id_predio}</span></div>
+        <div><strong>Superficie automática</strong><span>${Intl.NumberFormat("es-BO",{maximumFractionDigits:2}).format(ctx.superficie_terreno)} m2</span></div>
+        <div><strong>Fuente de superficie</strong><span>${ctx.superficie_terreno_fuente}</span></div>
+        <div><strong>Zona homogénea</strong><span>${ctx.zona_homogenea_codigo || "Sin dato"} / ${ctx.zona_homogenea_grupo || "Sin grupo"}</span></div>
+        <div><strong>Zona valor</strong><span>${ctx.zona_valor_nombre || "Sin asignar"}</span></div>
+        <div><strong>Material vía</strong><span>${ctx.material_via_nombre || "Sin asignar"}</span></div>
+        <div><strong>Servicios</strong><span>${(ctx.servicios || []).join(", ") || "Sin servicios"}</span></div>
+        <div><strong>Pendiente / riesgo</strong><span>${ctx.pendiente_codigo ?? "?"} / ${ctx.riesgo_grado || "?"}</span></div>
+      `;
+      superficieInput.placeholder = `Auto: ${ctx.superficie_terreno}`;
+      superficieInput.value = "";
+      superficieHelper.innerHTML = `Fuente automática: <code>${ctx.superficie_terreno_fuente}</code>`;
+      serviciosInput.value = (ctx.servicios || []).join(", ");
+    }
+
+    async function selectPredio(id) {
+      selectedPredioId = id;
+      autoBtn.disabled = false;
+      manualBtn.disabled = false;
+      avaluoStatus.textContent = "Cargando contexto del predio...";
+      try {
+        selectedContext = await fetchJSON(`/api/v1/avaluos/contexto/${id}`);
+        renderContext(selectedContext);
+        avaluoStatus.textContent = "Ahora puedes calcular automático o con superficie editada.";
+      } catch {
+        avaluoStatus.textContent = "No se pudo cargar el contexto del predio.";
+      }
+    }
+
+    async function calcularAvaluo(useManualSurface) {
+      if (!selectedPredioId) return;
+      const payload = {
+        gestion_anio: Number(gestionInput.value || 2026),
+        nombre_usuario: "admin",
+        valor_base_m2: Number(valorBaseInput.value || 100),
+        alicuota_impuesto: 0.0035,
+        factor_servicios: 1,
+        usar_tablas_maestras: true
+      };
+      if (useManualSurface && superficieInput.value) {
+        payload.superficie_terreno_override = Number(superficieInput.value);
+      }
+      autoBtn.disabled = true;
+      manualBtn.disabled = true;
+      avaluoStatus.textContent = useManualSurface ? "Calculando con superficie editada..." : "Calculando automáticamente...";
+      try {
+        const data = await fetchJSON(`/api/v1/avaluos/automatico/${selectedPredioId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        avaluoStatus.textContent =
+          `Base imponible ${Intl.NumberFormat("es-BO",{style:"currency",currency:"BOB",maximumFractionDigits:2}).format(data.base_imponible)} | ` +
+          `Impuesto ${Intl.NumberFormat("es-BO",{style:"currency",currency:"BOB",maximumFractionDigits:2}).format(data.impuesto_estimado)} | ` +
+          `Superficie aplicada ${Intl.NumberFormat("es-BO",{maximumFractionDigits:2}).format(data.superficie_terreno)} m2`;
+      } catch {
+        avaluoStatus.textContent = "No se pudo calcular el avalúo.";
+      } finally {
+        autoBtn.disabled = false;
+        manualBtn.disabled = false;
+      }
+    }
+
+    document.getElementById("opacity-pendiente").addEventListener("input", (e) => layers.pendientes.setStyle((f) => stylePendiente(f, Number(e.target.value)/100)));
+    document.getElementById("opacity-riesgo").addEventListener("input", (e) => layers.riesgos.setStyle((f) => styleRiesgo(f, Number(e.target.value)/100)));
+    document.getElementById("opacity-zonas").addEventListener("input", (e) => layers.zonas.combined.setStyle((f) => styleZona(f, Number(e.target.value)/100)));
+    autoBtn.addEventListener("click", () => calcularAvaluo(false));
+    manualBtn.addEventListener("click", () => calcularAvaluo(true));
+
+    async function refresh() {
+      await Promise.all([
+        loadLayer("zonas_homogeneas", layers.zonas.single, 1200, "zonas"),
+        loadLayer("zonas_homogeneas", layers.zonas.combined, 1200, "combinado"),
+        loadLayer("pendientes", layers.pendientes, 1400, "combinado"),
+        loadLayer("riesgos", layers.riesgos, 1400, "combinado"),
+        loadPredios(1800)
+      ]);
+    }
+
+    maps.zonas.on("moveend", () => loadLayer("zonas_homogeneas", layers.zonas.single, 1200, "zonas"));
+    maps.combinado.on("moveend", refresh);
+    Promise.all([loadStats(), loadMetodologia(), refresh()]).catch(() => { statsEl.innerHTML = buildStat("Estado", "Error"); });
+  </script>
+</body>
+</html>

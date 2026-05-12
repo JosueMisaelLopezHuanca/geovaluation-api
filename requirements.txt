@@ -1,0 +1,27 @@
+# FastAPI
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Base de datos
+sqlalchemy
+geoalchemy2
+asyncpg
+alembic
+
+# Sync DB (para scripts de importación)
+psycopg2-binary
+
+# Importación de shapefiles
+geopandas
+shapely
+pyproj
+
+# CLI
+rich
+typer
+
+# Tests
+pytest
+httpx
