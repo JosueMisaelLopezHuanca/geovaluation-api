@@ -1,6 +1,6 @@
 """
 =====================================================
-CLI DE IMPORTACIÓN DE SHAPEFILES — AVALIX v2
+CLI DE IMPORTACION DE SHAPEFILES - SISTEMA CATASTRAL
 =====================================================
 Uso (desde la raíz del proyecto):
     python -m scripts.importar explorar         → Ver columnas de los .shp
@@ -37,7 +37,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 console = Console()
-app = typer.Typer(help="Importador de Shapefiles → BD Avalix Catastral")
+app = typer.Typer(help="Importador de shapefiles a la BD catastral")
 
 # =====================================================
 # CONFIGURACIÓN DE SHAPEFILES
@@ -66,6 +66,10 @@ CAPAS = {
     "zonas_homogeneas": {
         "archivo": "zonas homogeneas La Paz.shp",
         "tabla_staging": "staging_zonas_homogeneas",
+    },
+    "otbs": {
+        "archivo": "otb_lapaz.shp",
+        "tabla_staging": "staging_otbs",
     },
 }
 
@@ -1160,7 +1164,7 @@ def transferir():
 def todo():
     """Ejecuta el flujo completo: staging → reparar → transferir."""
     console.print("\n[bold magenta]=======================================[/bold magenta]")
-    console.print("[bold magenta]   IMPORTACION COMPLETA - AVALIX v2   [/bold magenta]")
+    console.print("[bold magenta]   IMPORTACION COMPLETA - SISTEMA CATASTRAL   [/bold magenta]")
     console.print("[bold magenta]=======================================[/bold magenta]")
 
     staging()
@@ -1188,7 +1192,7 @@ def diagnostico():
             'zona', 'manzana', 'predio',
             'staging_predios', 'staging_manzanas',
             'staging_pendientes', 'staging_riesgos',
-            'staging_zonas_homogeneas'
+            'staging_zonas_homogeneas', 'staging_otbs'
         ]
 
         table = Table(title="Estado de la BD")
@@ -1209,7 +1213,8 @@ def diagnostico():
         console.print("\n  [bold]Extensión geográfica:[/bold]")
         with sync_engine.connect() as conn:
             for t, gcol in [('manzana', 'geom'), ('predio', 'geom'),
-                             ('staging_predios', None), ('staging_manzanas', None)]:
+                             ('staging_predios', None), ('staging_manzanas', None),
+                             ('staging_otbs', None)]:
                 try:
                     if gcol is None:
                         r = conn.execute(text(
