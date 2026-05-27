@@ -13,7 +13,11 @@ SYNC_DATABASE_URL = settings.DATABASE_URL.replace(
     "postgresql://"
 )
 
-sync_engine = create_engine(SYNC_DATABASE_URL, echo=False)
+sync_engine = create_engine(
+    SYNC_DATABASE_URL,
+    echo=False,
+    connect_args={"options": f"-csearch_path={settings.DATABASE_SEARCH_PATH}"},
+)
 
 
 def test_connection():

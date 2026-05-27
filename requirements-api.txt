@@ -1,0 +1,9 @@
+# Dependencias livianas para ejecutar solo la API en una beta cloud.
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+geoalchemy2
+asyncpg
+psycopg2-binary

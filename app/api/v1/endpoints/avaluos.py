@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
+from app.modules.auth.router import AuthSession, get_current_session
 from app.domain.avaluos.schemas import (
     AvaluoAutomaticoCreate,
     AvaluoContextResponse,
@@ -73,7 +74,9 @@ async def obtener_capa_contexto_bbox(
 
 @router.post("/", response_model=AvaluoResponse)
 async def generar_avaluo(
-    avaluo: AvaluoCreate, db: AsyncSession = Depends(get_db)
+    avaluo: AvaluoCreate,
+    db: AsyncSession = Depends(get_db),
+    _session: AuthSession = Depends(get_current_session),
 ):
     return await calcular_y_guardar_avaluo(db, avaluo)
 
@@ -82,6 +85,7 @@ async def generar_avaluo(
 async def listar_avaluos_guardados(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    _session: AuthSession = Depends(get_current_session),
 ):
     return await listar_avaluos(db, limit=limit)
 
@@ -90,6 +94,7 @@ async def listar_avaluos_guardados(
 async def obtener_avaluo_detalle(
     id_avaluo: str,
     db: AsyncSession = Depends(get_db),
+    _session: AuthSession = Depends(get_current_session),
 ):
     return await obtener_avaluo_por_id(db, id_avaluo=id_avaluo)
 
@@ -99,6 +104,7 @@ async def generar_avaluo_automatico(
     id_predio: str,
     payload: AvaluoAutomaticoCreate,
     db: AsyncSession = Depends(get_db),
+    _session: AuthSession = Depends(get_current_session),
 ):
     avaluo = AvaluoCreate(id_predio=id_predio, **payload.model_dump())
     return await calcular_y_guardar_avaluo(db, avaluo)

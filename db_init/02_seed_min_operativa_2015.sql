@@ -1,5 +1,5 @@
 -- =====================================================
--- SEMILLA MINIMA OPERATIVA - AVALIX
+-- SEMILLA MINIMA OPERATIVA - SISTEMA CATASTRAL
 -- Base normativa inicial: gestion tributaria 2015
 -- =====================================================
 
@@ -20,16 +20,16 @@ INSERT INTO persona (
 )
 SELECT
     'ADMIN',
-    'AVALIX',
+    'CATASTRO',
     'SISTEMA',
-    'AVALIX-ADMIN',
+    'CATASTRO-ADMIN',
     'LP',
-    'admin@avalix.local',
+    'admin@catastro.local',
     'ACTIVO'
 WHERE NOT EXISTS (
     SELECT 1
     FROM persona
-    WHERE ci = 'AVALIX-ADMIN'
+    WHERE ci = 'CATASTRO-ADMIN'
 );
 
 INSERT INTO usuario (
@@ -44,7 +44,7 @@ SELECT
     'seed-admin-sin-login',
     TRUE
 FROM persona p
-WHERE p.ci = 'AVALIX-ADMIN'
+WHERE p.ci = 'CATASTRO-ADMIN'
   AND NOT EXISTS (
       SELECT 1
       FROM usuario u
@@ -120,7 +120,7 @@ WHERE NOT EXISTS (
 -- 4. CATALOGOS MAESTROS
 -- -----------------------------------------------------
 
-INSERT INTO adminavalix (nombre, orden)
+INSERT INTO material_via (nombre, orden)
 SELECT *
 FROM (
     VALUES

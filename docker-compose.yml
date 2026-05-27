@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   db:
     image: postgis/postgis:15-3.3
-    container_name: avalix_db_v2
+    container_name: catastro_db_beta
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=adminavalix
+      - POSTGRES_PASSWORD=catastro_dev_password
       - POSTGRES_DB=avalix_db
     ports:
       - "5432:5432"
     volumes:
       - pgdata_v2:/var/lib/postgresql/data
-      # ¡Aquí está la magia! Docker ejecutará el SQL automáticamente
-      - ./db_init/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      # Ejecuta todos los scripts SQL al crear un volumen nuevo.
+      - ./db_init:/docker-entrypoint-initdb.d:ro
 
 volumes:
   pgdata_v2:

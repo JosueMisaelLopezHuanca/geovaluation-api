@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Documento de arquitectura objetivo para transformar el módulo actual de avalúos del sistema Avalix en un motor profesional de valuación catastral orientado a GIS, auditoría tributaria y operación municipal para el GAMLP.
+Documento de arquitectura objetivo para transformar el módulo actual de avalúos del sistema catastral en un motor profesional de valuación catastral orientado a GIS, auditoría tributaria y operación municipal para el GAMLP.
 
 Fecha base de diseño: 2026-05-11  
 Ámbito: backend geoespacial, modelos PostGIS, trazabilidad tributaria, frontend React operacional, cálculo masivo y cálculo individual auditable.
@@ -1056,7 +1056,7 @@ Uso en:
 
 ## 20. Recomendación directa para este repositorio
 
-El siguiente movimiento correcto sobre `avalix_backend_v2` es:
+El siguiente movimiento correcto sobre el backend catastral es:
 
 1. crear `app/modules/appraisal_engine`
 2. mantener el módulo actual `app/domain/avaluos` como fachada legacy temporal
@@ -1068,4 +1068,3 @@ El siguiente movimiento correcto sobre `avalix_backend_v2` es:
 5. luego migrar bloques de construcción y trazabilidad completa
 
 En otras palabras: el sistema actual ya tiene un buen esqueleto GIS. Lo que falta no es “otro CRUD”, sino convertir ese esqueleto en un motor normativo auditable y versionado.
-

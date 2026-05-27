@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Logs and generated output
+logs/
+*.log
+htmlcov/
+.coverage
+coverage.xml
+
+# GIS source data and database backups
+# Keep large raw datasets outside Git; deliver them as a controlled backup/artifact.
+shapefiles/
+*.backup
+*.dump
+*.sql.gz
+*.gpkg
+*.geojson
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

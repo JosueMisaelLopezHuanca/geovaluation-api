@@ -45,7 +45,7 @@ async def get_tile(db: AsyncSession, z: int, x: int, y: int):
             UNION ALL
             SELECT * FROM manzanas
         )
-        SELECT ST_AsMVT(union_geom, 'avalix', 4096, 'geom')
+        SELECT ST_AsMVT(union_geom, 'catastro', 4096, 'geom')
         FROM union_geom;
         """
     )

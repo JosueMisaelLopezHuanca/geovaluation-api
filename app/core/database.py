@@ -14,7 +14,8 @@ engine = create_async_engine(
     connect_args={
         "command_timeout": 60,
         "server_settings": {
-            "application_name": "avalix_backend_v2",
+            "application_name": "catastro_backend",
+            "search_path": settings.DATABASE_SEARCH_PATH,
         },
     },
 )

@@ -1,6 +1,15 @@
 from test.conftest import create_client
 
 
+def _admin_headers(client):
+    response = client.post(
+        "/api/v2/auth/login",
+        json={"user": "admin", "password": "change-this-local-password"},
+    )
+    assert response.status_code == 200
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
 def test_avaluos_health_reports_ok():
     client = create_client()
     response = client.get("/api/v1/avaluos/health")
@@ -149,7 +158,7 @@ def test_avaluos_list_returns_recent_items(monkeypatch):
     )
 
     client = create_client()
-    response = client.get("/api/v1/avaluos/?limit=10")
+    response = client.get("/api/v1/avaluos/?limit=10", headers=_admin_headers(client))
 
     assert response.status_code == 200
     body = response.json()
@@ -175,7 +184,10 @@ def test_avaluos_detail_returns_saved_item(monkeypatch):
     )
 
     client = create_client()
-    response = client.get("/api/v1/avaluos/11111111-1111-1111-1111-111111111111")
+    response = client.get(
+        "/api/v1/avaluos/11111111-1111-1111-1111-111111111111",
+        headers=_admin_headers(client),
+    )
 
     assert response.status_code == 200
     body = response.json()
@@ -221,6 +233,7 @@ def test_avaluos_post_returns_breakdown(monkeypatch):
     client = create_client()
     response = client.post(
         "/api/v1/avaluos/",
+        headers=_admin_headers(client),
         json={
             "id_predio": "22222222-2222-2222-2222-222222222222",
             "valor_base_m2": 472.1429,
@@ -262,6 +275,7 @@ def test_avaluos_post_accepts_ficha_tecnica(monkeypatch):
     client = create_client()
     response = client.post(
         "/api/v1/avaluos/",
+        headers=_admin_headers(client),
         json={
             "id_predio": "22222222-2222-2222-2222-222222222222",
             "valor_base_m2": 472.1429,
@@ -301,6 +315,7 @@ def test_avaluos_automatico_post_wraps_predio_id(monkeypatch):
     client = create_client()
     response = client.post(
         "/api/v1/avaluos/automatico/22222222-2222-2222-2222-222222222222",
+        headers=_admin_headers(client),
         json={
             "gestion_anio": 2026,
             "nombre_usuario": "admin",
