@@ -2,20 +2,21 @@ import base64
 import hashlib
 import hmac
 import json
-import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.core.config import settings
+
 
 router = APIRouter(prefix="/api/v2/auth", tags=["Auth"])
 
-ADMIN_USER = os.getenv("CATASTRO_ADMIN_USER", "admin")
-ADMIN_PASSWORD = os.getenv("CATASTRO_ADMIN_PASSWORD", "change-this-local-password")
-AUTH_SECRET = os.getenv("CATASTRO_AUTH_SECRET", "catastro-dev-secret-change-me")
-TOKEN_TTL_MINUTES = int(os.getenv("CATASTRO_AUTH_TTL_MINUTES", "240"))
+ADMIN_USER = settings.CATASTRO_ADMIN_USER
+ADMIN_PASSWORD = settings.CATASTRO_ADMIN_PASSWORD
+AUTH_SECRET = settings.CATASTRO_AUTH_SECRET
+TOKEN_TTL_MINUTES = settings.CATASTRO_AUTH_TTL_MINUTES
 
 
 class LoginRequest(BaseModel):
