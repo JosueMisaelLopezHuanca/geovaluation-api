@@ -29,6 +29,7 @@ shapefiles/
 *.backup
 *.dump
 *.sql.gz
+*.restore.list
 *.gpkg
 *.geojson
 
