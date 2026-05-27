@@ -1,7 +1,19 @@
 from app.core.config import Settings
 
 
-def test_settings_loads_complete_deployment_environment_file(tmp_path):
+def test_settings_loads_complete_deployment_environment_file(tmp_path, monkeypatch):
+    for key in (
+        "DATABASE_URL",
+        "DATABASE_SEARCH_PATH",
+        "CATASTRO_ADMIN_USER",
+        "CATASTRO_ADMIN_PASSWORD",
+        "CATASTRO_AUTH_SECRET",
+        "CATASTRO_AUTH_TTL_MINUTES",
+        "CORS_ALLOWED_ORIGINS",
+        "CORS_ALLOW_LAN",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
     env_file = tmp_path / ".env"
     env_file.write_text(
         "\n".join(
