@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     VERSION: str = "2.0.0"
     DATABASE_URL: str
     DATABASE_SEARCH_PATH: str = "public"
+    CATASTRO_ADMIN_USER: str = "admin"
+    CATASTRO_ADMIN_PASSWORD: str = "change-this-local-password"
+    CATASTRO_AUTH_SECRET: str = "catastro-dev-secret-change-me"
+    CATASTRO_AUTH_TTL_MINUTES: int = 240
     CORS_ALLOWED_ORIGINS: str = ""
     CORS_ALLOW_LAN: bool = True
 
